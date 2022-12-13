@@ -1,3 +1,5 @@
+#%%
+
 import csv
 import itertools
 import math
@@ -184,7 +186,7 @@ class MCF_graph_bis:
         # edges
         nx.draw_networkx_edges(G1, pos, width=3, edge_color=colorEdge)
         plt.axis('off')
-        plt.savefig(f"./files_test/graphs_drawn/bipartite graph with {left} left nodes and {right} right nodes.png")
+        plt.savefig("./graph normal dual.png")
         plt.clf()
     # weight1 = [1 for i in range(nombre_edge)]
     # afficher_graphe(weight1, [])
@@ -240,9 +242,11 @@ class MCF_graph_bis:
 
         status = Lp_prob.solve()  # Solver
         print('status ::::: ', LpStatus[status])
-
+        VALUEZZ = [value(Z[0][i]) for i in range(self.nombre_noeuds)]
         VALUEZ = [value(Y[i]) for i in range(self.nombre_edge)]
-        print('Values :::: ', VALUEZ)
+        print('Values y :::: ', VALUEZ)
+        print('Values z :::: ', VALUEZZ)
+
         return VALUEZ, value(Lp_prob.objective)
 
     def create_matrix(self):
@@ -412,9 +416,45 @@ class MCF_graph_bis:
                 res.append(idx)
         return [nodes[:resi + 1] for resi in res], min(sc)
 
-g = MCF_graph_bis('../graphe normal/demande_short.csv', 'noeux_short.csv', 'edge_short.csv')
-#g = MCF_graph_bis('Graphe biparti/graphs/Demands_bipartite(6, 6).csv', 'Graphe biparti/graphs/Nodes_bipartite(6, 6).csv', 'Graphe biparti/graphs/Edges_bipartite(6, 6).csv')
+    def brute_force(self):
+
+        nodes = [i for i in range(self.nombre_noeuds)]
+        set_nodes = [list(subset) for i in range(1, len(nodes)) for subset in itertools.combinations(nodes, i)]
+        sc = []
+        for set in set_nodes:
+            demandsum = 0
+            capsum = 0
+            for dem in self.DEMANDE:
+
+                if (dem[0] not in set and dem[1] in set) or (dem[0] in set and dem[1] not in set):
+
+                    demandsum += dem[2]
+
+            for edge in self.EDGES:
+                if (edge[1] not in set and edge[2] in set) or (edge[1] in set and edge[2] not in set):
+
+                    capsum += edge[4]
+            if demandsum > 0:
+                sc.append(capsum / demandsum)
+
+            else:
+                sc.append(np.infty)
+        #print("CCCUUUTS :::: ", sc)
+
+        temp = min(sc)
+        res = []
+        for idx in range(len(sc)):
+            if temp == sc[idx]:
+                res.append(set_nodes[idx])
+        return res, min(sc)
+
+
+# g = MCF_graph_bis('losange/demande_losange.csv', 'losange/noeux_losange.csv', 'losange/edge_losange.csv')
+g = MCF_graph_bis('Demands/Demands_bipartite(6, 6).csv', 'Nodes/Nodes_bipartite(6, 6).csv', 'Edges/Edges_bipartite(6, 6).csv')
 test_sp = []
 normal_sp = g.find_sp(False)
+g.export_graph([1 for i in range(g.nombre_edge)], normal_sp[0][0], 3, 2)
 print('normal :: ', normal_sp)
 
+
+# %%

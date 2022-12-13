@@ -245,7 +245,7 @@ class MCF_graph:
             for subelt in elt[1]:
                 eltbis[subelt] = elt[1][subelt]
             matrbis.append(eltbis)
-        print('Matrice de Fulkerson :: ', matrbis)
+        #print('Matrice de Fulkerson :: ', matrbis)
         return matrbis
 
     def partition(self, random1):
@@ -305,7 +305,7 @@ class MCF_graph:
                     vect.append(dist / (int(np.log(self.nombre_noeuds)) * math.comb(self.nombre_noeuds, card)))
                     #print(vect)
             vects.append(vect)
-        print('VECTS ::::: ', vects)
+        #print('VECTS ::::: ', vects)
         num = 0
         denum = 0
 
@@ -401,14 +401,48 @@ class MCF_graph:
                 res.append(idx)
         return [nodes[:resi + 1] for resi in res], min(sc)
 
-g = MCF_graph('../graphe normal/demande_short.csv', 'noeux_short.csv', 'edge_short.csv')
-#g = MCF_graph('Graphe biparti/graphs/Demands_bipartite(6, 6).csv', 'Graphe biparti/graphs/Nodes_bipartite(6, 6).csv', 'Graphe biparti/graphs/Edges_bipartite(6, 6).csv')
+    def brute_force(self):
 
-weight = [1 for i in range(g.nombre_edge)]
-g.export_graph(weight, [], 3, 4)
-test_sp = []
-normal_sp = g.find_sp(False)
-print('normal :: ', normal_sp)
-random_sp = g.find_sp(True)
-print('random :: ', random_sp)
-g.export_graph(weight, random_sp[0][0], 3, 4)
+        nodes = [i for i in range(self.nombre_noeuds)]
+        set_nodes = [list(subset) for i in range(1, len(nodes)) for subset in itertools.combinations(nodes, i)]
+        sc = []
+        for set in set_nodes:
+            demandsum = 0
+            capsum = 0
+            for dem in self.DEMANDE:
+
+                if (dem[0] not in set and dem[1] in set) or (dem[0] in set and dem[1] not in set):
+
+                    demandsum += dem[2]
+
+            for edge in self.EDGES:
+                if (edge[1] not in set and edge[2] in set) or (edge[1] in set and edge[2] not in set):
+
+                    capsum += edge[4]
+            if demandsum > 0:
+                sc.append(capsum / demandsum)
+
+            else:
+                sc.append(np.infty)
+        #print("CCCUUUTS :::: ", sc)
+
+        temp = min(sc)
+        res = []
+        for idx in range(len(sc)):
+            if temp == sc[idx]:
+                res.append(set_nodes[idx])
+        return res, min(sc)
+
+#g = MCF_graph('losange/demande_losange.csv', 'losange/noeux_losange.csv', 'losange/edge_losange.csv')
+#g = MCF_graph('Graphe biparti/graphs/Demands_bipartite(6, 6).csv', 'Graphe biparti/graphs/Nodes_bipartite(6, 6).csv', 'Graphe biparti/graphs/Edges_bipartite(6, 6).csv')
+# g = MCF_graph('Demands/Demands_bipartite(6, 6).csv', 'Nodes/Nodes_bipartite(6, 6).csv', 'Edges/Edges_bipartite(6, 6).csv')
+# weight = [1 for i in range(g.nombre_edge)]
+# g.afficher_graphe(weight, [])
+# test_sp = []
+# normal_sp = g.find_sp(False)
+# print('normal :: ', normal_sp)
+# random_sp = g.find_sp(True)
+# print('random :: ', random_sp)
+# g.export_graph(weight, random_sp[0][0], 3, 4)
+# truedat = g.brute_force()
+# print('brute force :: ', truedat)
